@@ -23,13 +23,13 @@ GLfloat vertexarray[]={size,size,-size,
 };
 
 GLfloat colorarray[]={1.0f,1.0f,1.0f,1.0f,
-		      0.5f,1.0f,1.0f,1.0f,
-		      1.0f,0.5f,1.0f,1.0f,
-		      1.0f,1.0f,0.5f,1.0f,
 		      1.0f,1.0f,1.0f,1.0f,
-		      0.5f,1.0f,1.0f,1.0f,
-		      1.0f,0.5f,1.0f,1.0f,
-                      1.0f,1.0f,0.5f,1.0f
+		      1.0f,1.0f,1.0f,1.0f,
+		      1.0f,1.0f,1.0f,1.0f,
+		      1.0f,1.0f,1.0f,1.0f,
+		      1.0f,1.0f,1.0f,1.0f,
+		      1.0f,1.0f,1.0f,1.0f,
+                      1.0f,1.0f,1.0f,1.0f
 };
 											
 GLubyte elems[]={0,1,2,3,7,4,5,6,
@@ -66,10 +66,23 @@ void init(){
   program=initShaders(shaders);
   
   glEnableVertexAttribArray(0);
-  glEnableVertexAttribArray(1);
-  
+  glEnableVertexAttribArray(1);  
 }
 
+void initLight1(){
+  GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
+  GLfloat mat_shininess[] = {50.0};
+  GLfloat light_position[] = {1.0, 1.0, 1.0, 1.0};
+  glClearColor(0.0, 0.0, 0.0, 0.0);
+  glShadeModel(GL_SMOOTH);
+
+  glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+  glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+}
 
 void display(SDL_Window* screen){
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -147,7 +160,7 @@ int main(int argc, char **argv){
   if(window==NULL){
     fprintf(stderr,"Unable to create window: %s\n",SDL_GetError());
   }
-	
+
 
   //creates opengl context associated with the window
   SDL_GLContext glcontext=SDL_GL_CreateContext(window);
@@ -160,6 +173,7 @@ int main(int argc, char **argv){
   }
   
   init();
+  initLight1();
 	
   while(true){
     input(window);//keyboard controls
