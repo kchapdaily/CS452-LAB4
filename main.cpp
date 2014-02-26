@@ -69,19 +69,34 @@ void init(){
   glEnableVertexAttribArray(1);  
 }
 
-void initLight1(){
+void initLights(){
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+
   GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
   GLfloat mat_shininess[] = {50.0};
-  GLfloat light_position[] = {1.0, 1.0, 1.0, 1.0};
+
+  GLfloat light_ambient[] = {0.2, 0.2, 0.2, 1.0};
+  GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+  GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
+  GLfloat light_position[] = {20.0, 20.0, 20.0, 0.0};
+
+  GLfloat al[] = {0.2, 0.2, 0.2, 1.0};
+  
   glClearColor(0.0, 0.0, 0.0, 0.0);
   glShadeModel(GL_SMOOTH);
 
   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
   glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
-  glEnable(GL_LIGHTING);
-  glEnable(GL_LIGHT0);
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+  glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+
+  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, al);
+  // glLightModelfv(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); //gives an error on argument 2
+
 }
 
 void display(SDL_Window* screen){
@@ -173,7 +188,7 @@ int main(int argc, char **argv){
   }
   
   init();
-  initLight1();
+  initLights();
 	
   while(true){
     input(window);//keyboard controls
