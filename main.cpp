@@ -170,8 +170,8 @@ int main(int argc, char** argv)
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
     glutInitWindowSize(512, 512);
 
-	glutInitContextVersion( 3, 2 );
-	glutInitContextProfile( GLUT_CORE_PROFILE );
+    glutInitContextVersion( 2, 1 );
+    glutInitContextProfile( GLUT_CORE_PROFILE );
 
     glutCreateWindow("Color Cube");
     glutDisplayFunc(display);
