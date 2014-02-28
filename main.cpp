@@ -1,203 +1,188 @@
-#include "initShaders.h"
-#include <cstdlib>
-using namespace std;
+// rotating cube with lighting
 
-void rotate(GLuint locate);
+// shades computed at vertices in application
 
-GLuint vaoID,vboID[2],eboID;
+
+#include "Angel.h"
+
+const int NumVertices = 36; //(6 faces)(2 triangles/face)(3 vertices/triangle)
+
+typedef Angel::vec4  point4;
+typedef Angel::vec4  color4;
+
+int axis = 0;
+float theta[3] = {0.0, 0.0, 0.0};
+
+GLuint buffers[2];
+GLuint loc, loc2;
+GLint matrix_loc;
+
+point4  vertices[8] = {point4(-0.5,-0.5,0.5, 1.0),point4(-0.5,0.5,0.5, 1.0),
+   point4(0.5,0.5,0.5, 1.0), point4(0.5,-0.5,0.5, 1.0), point4(-0.5,-0.5,-0.5, 1.0),
+   point4(-0.5,0.5,-0.5, 1.0), point4(0.5,0.5,-0.5, 1.0), point4(0.5,-0.5,-0.5, 1.0)};
+
+
+vec4 viewer = vec4(0.0, 0.0, 1.0, 0.0);
+point4 light_position = point4(0.0, 0.0, -1.0, 0.0);
+color4 light_ambient = color4(0.2, 0.2, 0.2, 1.0);
+color4 light_diffuse = color4(1.0, 1.0, 1.0, 1.0);
+color4 light_specular = color4(1.0, 1.0, 1.0, 1.0);
+
+color4 material_ambient = color4(1.0, 0.0, 1.0, 1.0);
+color4 material_diffuse = color4(1.0, 0.8, 0.0, 1.0);
+color4 material_specular = color4(1.0, 0.8, 0.0, 1.0);
+float material_shininess = 100.0;
+
+point4 points[NumVertices];
+color4 quad_color[NumVertices];
+mat4 ctm;
+
 GLuint program;
 
-GLfloat pit,yaw,scalar=1;
-glm::vec3 cubeTran;
+// matrix functions
 
-GLfloat size=10;
+// product of components
 
-GLfloat vertexarray[]={size,size,-size,
-		       size,-size,-size,
-                       -size,-size,-size,
-                       -size,size,-size,
-                       size,size,size,
-                       size,-size,size,
-                       -size,-size,size,
-                       -size,size,size
-};
-
-GLfloat colorarray[]={1.0f,1.0f,1.0f,1.0f,
-		      1.0f,1.0f,1.0f,1.0f,
-		      1.0f,1.0f,1.0f,1.0f,
-		      1.0f,1.0f,1.0f,1.0f,
-		      1.0f,1.0f,1.0f,1.0f,
-		      1.0f,1.0f,1.0f,1.0f,
-		      1.0f,1.0f,1.0f,1.0f,
-                      1.0f,1.0f,1.0f,1.0f
-};
-											
-GLubyte elems[]={0,1,2,3,7,4,5,6,
-		 7,3,0,4,5,6,2,1,
-		 0,1,5,4,7,3,2,6
-};
-
-void init(){
-  glEnable(GL_DEPTH_TEST);
-  glViewport(0, 0, 600, 600);
-	
-  glGenVertexArrays(1,&vaoID);
-  glBindVertexArray(vaoID);
-	
-  glGenBuffers(2, vboID);
-  glBindBuffer(GL_ARRAY_BUFFER,vboID[0]);
-  glBufferData(GL_ARRAY_BUFFER,sizeof(vertexarray),vertexarray,GL_STATIC_DRAW);
-  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,(void*)0);
-	
-  glBindBuffer(GL_ARRAY_BUFFER, vboID[1]);
-  glBufferData(GL_ARRAY_BUFFER,sizeof(colorarray),colorarray,GL_STATIC_DRAW);
-  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-  
-  glGenBuffers(1,&eboID);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,eboID);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(elems),elems,GL_STATIC_DRAW);
-
-  ShaderInfo shaders[]={
-    { GL_VERTEX_SHADER , "vertexshader.glsl"},
-    { GL_FRAGMENT_SHADER , "fragmentshader.glsl"}, 
-    { GL_NONE , NULL} 
-  };
-		
-  program=initShaders(shaders);
-  
-  glEnableVertexAttribArray(0);
-  glEnableVertexAttribArray(1);  
-}
-
-void initLights(){
-  glEnable(GL_LIGHTING);
-  glEnable(GL_LIGHT0);
-
-  GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
-  GLfloat mat_shininess[] = {50.0};
-
-  GLfloat light_ambient[] = {0.2, 0.2, 0.2, 1.0};
-  GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
-  GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
-  GLfloat light_position[] = {20.0, 20.0, 20.0, 0.0};
-
-  GLfloat al[] = {0.2, 0.2, 0.2, 1.0};
-  
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-  glShadeModel(GL_SMOOTH);
-
-  glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-  glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-
-  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-  glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-  glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-
-  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, al);
-  // glLightModelfv(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); //gives an error on argument 2
-
-}
-
-void display(SDL_Window* screen){
-  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-	
-  glm::mat4 trans;
-	
-  trans=glm::translate(trans,cubeTran);//translate the cube
-  trans=glm::rotate(trans,pit,glm::vec3(1,0,0));//rotate the cube around the x axis
-  trans=glm::rotate(trans,yaw,glm::vec3(0,1,0));//rotate the cube arround the y axis
-  trans=glm::scale(trans,glm::vec3(scalar));//scaling the cube
-    
-  GLint tempLoc = glGetUniformLocation(program,"modelMatrix");//Matrix that handle the transformations
-  glUniformMatrix4fv(tempLoc,1,GL_FALSE,&trans[0][0]);
-	
-  glDrawElements(GL_POLYGON,24,GL_UNSIGNED_BYTE,NULL);
-  glFlush();
-  SDL_GL_SwapWindow(screen);
-}
-
-void input(SDL_Window* screen){
-
-  SDL_Event event;
-
-  while (SDL_PollEvent(&event)){//Handling the keyboard
-    switch (event.type){
-    case SDL_QUIT:exit(0);break;
-    case SDL_KEYDOWN:
-      switch(event.key.keysym.sym){
-      case SDLK_ESCAPE:exit(0);
-      case SDLK_w:cubeTran.y+=2;break;
-      case SDLK_s:cubeTran.y-=2;break;
-      case SDLK_a:cubeTran.x-=2;break;
-      case SDLK_d:cubeTran.x+=2;break;
-      case SDLK_e:scalar+=.1f;break;
-      case SDLK_q:scalar-=.1f;break;
-      case SDLK_i:pit+=2;break;
-      case SDLK_k:pit-=2;break;
-      case SDLK_j:yaw+=2;break;
-      case SDLK_l:yaw-=2;break;
-      }
-      /*case SDL_MOUSEMOTION:
-	yaw+=((event.motion.x)-300)/10.0;
-	pit+=((event.motion.y)-300)/10.0;
-	SDL_WarpMouseInWindow(screen,300,300);
-				
-	}
-      */
-    }
-  }
+vec4 product(vec4 a, vec4 b)
+{
+   return vec4(a[0]*b[0], a[1]*b[1], a[2]*b[2], a[3]*b[3]);
 }
 
 
-int main(int argc, char **argv){
-	
-  //SDL window and context management
-  SDL_Window *window;
-	
-  if(SDL_Init(SDL_INIT_VIDEO)<0){//initilizes the SDL video subsystem
-    fprintf(stderr,"Unable to create window: %s\n", SDL_GetError());
-    SDL_Quit();
-    exit(1);//die on error
-  }
+void quad(int a, int b, int c, int d)
+{
+     static int i =0; 
+     
+     vec3 n1 = normalize(cross(ctm*vertices[b] - ctm*vertices[a], ctm*vertices[c] - ctm*vertices[b]));
+     vec4 n = vec4(n1[0], n1[1], n1[2], 0.0);
+     vec4 half = normalize(light_position+viewer);
+     color4 ambient_color, diffuse_color, specular_color;
 
-  //create window
-  window = SDL_CreateWindow(
-			    "Example", //Window title
-			    SDL_WINDOWPOS_UNDEFINED, //initial x position
-			    SDL_WINDOWPOS_UNDEFINED, //initial y position
-			    500,							//width, in pixels
-			    500,							//height, in pixels
-			    SDL_WINDOW_OPENGL	//flags to be had
-			    );
-	
-  //check window creation
-  if(window==NULL){
-    fprintf(stderr,"Unable to create window: %s\n",SDL_GetError());
-  }
+     ambient_color = product(material_ambient, light_ambient);
+     float dd = dot(light_position, n);
+
+     if(dd>0.0) diffuse_color = dd*product(light_diffuse, material_diffuse);
+     else diffuse_color =  color4(0.0, 0.0, 0.0, 1.0);
+
+     dd = dot(half, n);
+     if(dd > 0.0) specular_color = exp(material_shininess*log(dd))*product(light_specular, material_specular);
+     else specular_color = vec4(0.0, 0.0, 0.0, 1.0);
+
+     quad_color[i] = ambient_color + diffuse_color;
+     points[i] = ctm*vertices[a];
+     i++;
+     quad_color[i] = ambient_color + diffuse_color;
+     points[i] = ctm*vertices[b];
+     i++;
+     quad_color[i] = ambient_color + diffuse_color;
+     points[i] = ctm*vertices[c];
+     i++;
+     quad_color[i] = ambient_color + diffuse_color;
+     points[i] = ctm*vertices[a];
+     i++;
+     quad_color[i] = ambient_color + diffuse_color;
+     points[i] = ctm*vertices[c];
+     i++;
+     quad_color[i] = ambient_color + diffuse_color;
+     points[i] = ctm*vertices[d];
+     i++;
+     i%=NumVertices;
+}
+
+void colorcube()
+{
+   quad(1,0,3,2);
+   quad(2,3,7,6);
+   quad(3,0,4,7);
+   quad(6,5,1,2);
+   quad(4,5,6,7);
+   quad(5,4,0,1);
+}
 
 
-  //creates opengl context associated with the window
-  SDL_GLContext glcontext=SDL_GL_CreateContext(window);
-	
-  //initializes glew
-  glewExperimental=GL_TRUE;
-  if(glewInit()){
-    fprintf(stderr, "Unable to initalize GLEW");
-    exit(EXIT_FAILURE);
-  }
-  
-  init();
-  initLights();
-	
-  while(true){
-    input(window);//keyboard controls
-    display(window);//displaying
-  }
+/* OpenGL initialization */
 
-  SDL_GL_DeleteContext(glcontext);
-  SDL_DestroyWindow(window);
-  SDL_Quit();
- 
-  return 0;
+void init()
+{
+
+    // Create a vertex array object
+    GLuint vao;
+    glGenVertexArrays( 1, &vao );
+    glBindVertexArray( vao );
+
+/* set up vertex buffer object */
+
+   glGenBuffers(1, buffers);
+   glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+   glBufferData(GL_ARRAY_BUFFER, sizeof(points) + sizeof(quad_color), NULL, GL_STATIC_DRAW);
+
+   program = InitShader("vshader52.glsl", "fshader52.glsl");
+   glUseProgram(program);
+
+   loc = glGetAttribLocation(program, "vPosition");
+   glEnableVertexAttribArray(loc);
+   glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+   loc2 = glGetAttribLocation(program, "vColor");
+   glEnableVertexAttribArray(loc2);
+   glVertexAttribPointer(loc2, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(points)));
+
+   glClearColor(1.0, 1.0, 1.0, 1.0); /* white background */
+}
+
+void display( void )
+{
+     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  /*clear the window */
+     ctm = RotateX(theta[0])*RotateY(theta[1])*RotateZ(theta[2]);
+     colorcube();
+
+    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(points), points );
+    glBufferSubData( GL_ARRAY_BUFFER, sizeof(points), sizeof(quad_color), quad_color );
+
+     glDrawArrays(GL_TRIANGLES, 0, NumVertices); 
+     glutSwapBuffers();
+}
+
+void mouse(int btn, int state, int x, int y)
+{
+    if(btn==GLUT_LEFT_BUTTON && state == GLUT_DOWN) axis = 0;
+    if(btn==GLUT_MIDDLE_BUTTON && state == GLUT_DOWN) axis = 1;
+    if(btn==GLUT_RIGHT_BUTTON && state == GLUT_DOWN) axis = 2;
+}
+
+void spinCube()
+{
+   theta[axis] += 0.5;
+   if( theta[axis] > 360.0 ) theta[axis] -= 360.0;
+   glutPostRedisplay();
+}
+
+void mykey(unsigned char key, int mousex, int mousey)
+{
+   if(key=='q'||key=='Q') exit(0);
+}
+
+
+
+int main(int argc, char** argv)
+{
+
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
+    glutInitWindowSize(512, 512);
+
+	glutInitContextVersion( 3, 2 );
+	glutInitContextProfile( GLUT_CORE_PROFILE );
+
+    glutCreateWindow("Color Cube");
+    glutDisplayFunc(display);
+    glutMouseFunc(mouse);
+    glutIdleFunc(spinCube);
+    glutKeyboardFunc(mykey);
+
+	glewInit();
+    init();
+
+    glEnable(GL_DEPTH_TEST);
+    glutMainLoop();
+    return 0;
 }
