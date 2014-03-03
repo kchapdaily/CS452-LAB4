@@ -9,11 +9,33 @@ const int NumVertices         = 3 * NumTriangles;
 typedef Angel::vec4 point4;
 typedef Angel::vec4 color4;
 
+typedef struct matProps{
+  color4 ambient;
+  color4 diffuse;
+  color4 specular;
+  float shininess;
+} matProps;
+
+typedef struct lightProps{
+  point4 position;
+  color4 ambient;
+  color4 diffuse;
+  color4 specular;
+} lightProps;
+  
+
 point4 points[NumVertices];
-vec3   normals[NumVertices];
+vec3 normals[NumVertices];
 
 // Model-view and projection matrices uniform location
 GLuint  ModelView, Projection;
+
+void setPosition(lightProps light, float x, float y, float z, float a){
+  light.ambient[0] = x;
+  light.ambient[1] = y;
+  light.ambient[2] = z;
+  light.ambient[3] = a;
+}
 
 //----------------------------------------------------------------------------
 
@@ -119,15 +141,20 @@ init()
 			   BUFFER_OFFSET(sizeof(points)) );
 
     // Initialize shader lighting parameters
-    point4 light_position( 0.0, 0.0, 2.0, 0.0 );
-    color4 light_ambient( 0.2, 0.2, 0.2, 1.0 );
-    color4 light_diffuse( 1.0, 1.0, 1.0, 1.0 );
-    color4 light_specular( 1.0, 1.0, 1.0, 1.0 );
 
-    color4 material_ambient( 1.0, 0.0, 1.0, 1.0 );
-    color4 material_diffuse( 1.0, 0.8, 0.0, 1.0 );
-    color4 material_specular( 1.0, 0.0, 1.0, 1.0 );
-    float  material_shininess = 5.0;
+    lightProps light1;
+    lightProps light2;
+    matProps mat1;
+
+    setPosition( light1, 0.8, 1.0, 2.5, 0.0 );
+    setAmbient( light1, 0.2, 0.2, 0.2, 1.0 );
+    setDiffuse( light1, 1.0, 1.0, 1.0, 1.0 );
+    setSpecular( light1, 1.0, 1.0, 1.0, 1.0 );
+
+    setAmbient( mat1, 0.2, 0.0, 0.0, 0.0 );
+    mat1.setDiiffuse( mat1, 1.0, 0.0, 0.0, 0.0 );
+    mat1.setSpecular( mat1, 0.1, 0.0, 0.0, 0.0 );
+    setShininess( mat1, 1.0);
 
     color4 ambient_product = light_ambient * material_ambient;
     color4 diffuse_product = light_diffuse * material_diffuse;
