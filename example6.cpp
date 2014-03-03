@@ -1,41 +1,26 @@
 // fragment shading of sphere model
 
 #include "Angel.h"
+#include "properties.h"
 
 const int NumTimesToSubdivide = 5;
 const int NumTriangles        = 4096;  // (4 faces)^(NumTimesToSubdivide + 1)
 const int NumVertices         = 3 * NumTriangles;
 
-typedef Angel::vec4 point4;
-typedef Angel::vec4 color4;
-
-typedef struct matProps{
-  color4 ambient;
-  color4 diffuse;
-  color4 specular;
-  float shininess;
-} matProps;
-
-typedef struct lightProps{
-  point4 position;
-  color4 ambient;
-  color4 diffuse;
-  color4 specular;
-} lightProps;
-  
+// typedef Angel::vec4 point4;
+// typedef Angel::vec4 color4;  
 
 point4 points[NumVertices];
 vec3 normals[NumVertices];
 
+//creating light and material objects
+matProps * mat1 = new matProps();
+lightProps * light1 = new lightProps();
+lightProps * light2 = new lightProps();
+//----------------------------------------------------------------------------
+
 // Model-view and projection matrices uniform location
 GLuint  ModelView, Projection;
-
-void setPosition(lightProps light, float x, float y, float z, float a){
-  light.ambient[0] = x;
-  light.ambient[1] = y;
-  light.ambient[2] = z;
-  light.ambient[3] = a;
-}
 
 //----------------------------------------------------------------------------
 
@@ -140,38 +125,34 @@ init()
     glVertexAttribPointer( vNormal, 3, GL_FLOAT, GL_FALSE, 0,
 			   BUFFER_OFFSET(sizeof(points)) );
 
-    // Initialize shader lighting parameters
-
-    lightProps light1;
-    lightProps light2;
-    matProps mat1;
-
+    // Initialize shader lighting propterties
     setPosition( light1, 0.8, 1.0, 2.5, 0.0 );
     setAmbient( light1, 0.2, 0.2, 0.2, 1.0 );
     setDiffuse( light1, 1.0, 1.0, 1.0, 1.0 );
     setSpecular( light1, 1.0, 1.0, 1.0, 1.0 );
-
+	
+	//Initialize material properties
     setAmbient( mat1, 0.2, 0.0, 0.0, 0.0 );
-    mat1.setDiiffuse( mat1, 1.0, 0.0, 0.0, 0.0 );
-    mat1.setSpecular( mat1, 0.1, 0.0, 0.0, 0.0 );
+    setDiffuse( mat1, 1.0, 0.0, 0.0, 0.0 );
+    setSpecular( mat1, 0.1, 0.0, 0.0, 0.0 );
     setShininess( mat1, 1.0);
 
-    color4 ambient_product = light_ambient * material_ambient;
-    color4 diffuse_product = light_diffuse * material_diffuse;
-    color4 specular_product = light_specular * material_specular;
+    color4 ambient_product = (light1->ambient) * (mat1->ambient);
+    color4 diffuse_product = (light1->diffuse) * (*mat1->diffuse);
+    color4 specular_product = (light1->specular) * (mat1->specular);
 
     glUniform4fv( glGetUniformLocation(program, "AmbientProduct"),
-		  1, ambient_product );
+				  1, ambient_product );
     glUniform4fv( glGetUniformLocation(program, "DiffuseProduct"),
-		  1, diffuse_product );
+				  1, diffuse_product );
     glUniform4fv( glGetUniformLocation(program, "SpecularProduct"),
-		  1, specular_product );
+				  1, specular_product );
 	
     glUniform4fv( glGetUniformLocation(program, "LightPosition"),
-		  1, light_position );
+				  1, light1->position );
 
     glUniform1f( glGetUniformLocation(program, "Shininess"),
-		 material_shininess );
+				 mat1->shininess );
 		 
     // Retrieve transformation uniform variable locations
     ModelView = glGetUniformLocation( program, "ModelView" );
