@@ -10,29 +10,42 @@ typedef Angel::vec4 color4;
 // Model-view and projection matrices uniform location
 GLuint  ModelView, Projection;
 
-GLfloat size=10;
+GLfloat size=1;
 
 GLfloat vertexarray[]={size, size, size,   //V0
-		       -size, size, -size, //V1
-		       size, -size, -size, //V2
-		       -size, -size, size  //V3
+					   -size, size, size,  //V1
+					   -size, size, -size, //V2
+					   size, size, -size,  //V3
+					   size, -size, size,  //V4
+					   -size, -size, size, //V5
+					   -size, -size, -size,//V6
+					   size, -size, -size  //V7
 };
 
 GLfloat colorarray[]={1.0f,1.0f,1.0f,1.0f,
-		      0.5f,1.0f,1.0f,1.0f,
-		      1.0f,0.5f,1.0f,1.0f,
-		      1.0f,1.0f,0.5f,1.0f,
-		      1.0f,1.0f,1.0f,1.0f,
-		      0.5f,1.0f,1.0f,1.0f,
-		      1.0f,0.5f,1.0f,1.0f,
+					  0.5f,1.0f,1.0f,1.0f,
+					  1.0f,0.5f,1.0f,1.0f,
+					  1.0f,1.0f,0.5f,1.0f,
+					  1.0f,1.0f,1.0f,1.0f,
+					  0.5f,1.0f,1.0f,1.0f,
+					  1.0f,0.5f,1.0f,1.0f,
                       1.0f,1.0f,0.5f,1.0f
 };											
 
 
-GLubyte elems[]={0, 1, 2, 
-		 3, 0, 1,
-		 0, 2, 3,
-		 1, 2, 3
+GLubyte elems[]={0, 1, 2,
+				 2, 3, 0,
+				 0, 3, 7,
+				 7, 4, 0,
+				 0, 4, 5,
+				 5, 0, 1,
+				 1, 2, 5,
+				 5, 2, 6,
+				 6, 2, 3,
+				 3, 6, 7,
+				 7, 6, 4,
+				 4, 5, 6
+				 
 };
 
 //----------------------------------------------------------------------------
@@ -42,22 +55,17 @@ void
 init()
 {
     // Create a vertex array object
-    GLuint vao, vbo[2], ebo;
+    GLuint vao, vbo, ebo;
 
     glGenVertexArrays( 1, &vao );
     glBindVertexArray( vao );
 	
-
 	// bind vertex, color, and elems arrays to buffers
-	glGenBuffers(2, vbo);
-	glBindBuffer(GL_ARRAY_BUFFER,vbo[0]);
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER,vbo);
 	glBufferData(GL_ARRAY_BUFFER,sizeof(vertexarray),vertexarray,GL_STATIC_DRAW);
 	glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,(void*)0);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER,sizeof(colorarray),colorarray,GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-  
+    
 	glGenBuffers(1,&ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(elems),elems,GL_STATIC_DRAW);
@@ -69,33 +77,23 @@ init()
 	
     // set up vertex arrays
 	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-
-    // GLuint vPosition = glGetAttribLocation( program, "vPosition" );
-    // glEnableVertexAttribArray( vPosition );
-    // glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0,
-	// 		   BUFFER_OFFSET(0) );
-
-    // GLuint vNormal = glGetAttribLocation( program, "vNormal" ); 
-    // glEnableVertexAttribArray( vNormal );
-    // glVertexAttribPointer( vNormal, 3, GL_FLOAT, GL_FALSE, 0,
-	// 		   BUFFER_OFFSET(sizeof(points)) );
+	// glEnableVertexAttribArray(1);
 
     // Initialize shader lighting parameters
-    point4 light_position( 0.0, 0.0, 2.0, 0.0 );
-    color4 light_ambient( 0.2, 0.2, 0.2, 1.0 );
-    color4 light_diffuse( 1.0, 1.0, 1.0, 1.0 );
-    color4 light_specular( 1.0, 1.0, 1.0, 1.0 );
+    point4 light_position( 0.0, 0.0, -2.0, 0.0 );
+    color4 light_ambient( 0.0, 0.5, 0.0, 1.0 );
+    color4 light_diffuse( 0.0, 1.0, 0.0, 1.0 );
+    color4 light_specular( 0.0, 0.0, 0.0, 1.0 );
 
-    color4 material_ambient( 1.0, 0.0, 1.0, 1.0 );
-    color4 material_diffuse( 1.0, 0.8, 0.0, 1.0 );
-    color4 material_specular( 1.0, 0.0, 1.0, 1.0 );
+    color4 material_ambient( 1.0, 1.0, 1.0, 1.0 );
+    color4 material_diffuse( 1.0, 1.0, 1.0, 1.0 );
+    color4 material_specular( 1.0, 1.0, 1.0, 1.0 );
     float  material_shininess = 5.0;
 
     color4 ambient_product = light_ambient * material_ambient;
     color4 diffuse_product = light_diffuse * material_diffuse;
     color4 specular_product = light_specular * material_specular;
-
+	
     glUniform4fv( glGetUniformLocation(program, "AmbientProduct"),
 		  1, ambient_product );
     glUniform4fv( glGetUniformLocation(program, "DiffuseProduct"),
@@ -126,13 +124,14 @@ display( void )
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     point4 at( 0.0, 0.0, 0.0, 1.0 );
-    point4 eye( 0.0, 0.0, 2.0, 1.0 );
+    point4 eye( 2.0, 2.0, 2.0, 1.0 );
     vec4   up( 0.0, 1.0, 0.0, 0.0 );
 
     mat4 model_view = LookAt( eye, at, up );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view );
 
-    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
+	glDrawElements(GL_TRIANGLES, sizeof(elems), GL_UNSIGNED_BYTE,NULL);
+    // glDrawArrays( GL_TRIANGLES, 0, NumVertices );
     glutSwapBuffers();
 }
 
