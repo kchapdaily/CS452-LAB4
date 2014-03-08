@@ -2,82 +2,38 @@
 
 #include "Angel.h"
 
-const int NumTimesToSubdivide = 5;
-const int NumTriangles        = 4096;  // (4 faces)^(NumTimesToSubdivide + 1)
-const int NumVertices         = 3 * NumTriangles;
+const int NumVertices = 8;
 
 typedef Angel::vec4 point4;
 typedef Angel::vec4 color4;
 
-point4 points[NumVertices];
-vec3   normals[NumVertices];
-
 // Model-view and projection matrices uniform location
 GLuint  ModelView, Projection;
 
-//----------------------------------------------------------------------------
+GLfloat size=10;
 
-int Index = 0;
+GLfloat vertexarray[]={size, size, size,   //V0
+		       -size, size, -size, //V1
+		       size, -size, -size, //V2
+		       -size, -size, size  //V3
+};
 
-void
-triangle( const point4& a, const point4& b, const point4& c )
-{
-    vec3  normal = normalize( cross(b - a, c - b) );
+GLfloat colorarray[]={1.0f,1.0f,1.0f,1.0f,
+		      0.5f,1.0f,1.0f,1.0f,
+		      1.0f,0.5f,1.0f,1.0f,
+		      1.0f,1.0f,0.5f,1.0f,
+		      1.0f,1.0f,1.0f,1.0f,
+		      0.5f,1.0f,1.0f,1.0f,
+		      1.0f,0.5f,1.0f,1.0f,
+                      1.0f,1.0f,0.5f,1.0f
+};											
 
-    normals[Index] = normal;  points[Index] = a;  Index++;
-    normals[Index] = normal;  points[Index] = b;  Index++;
-    normals[Index] = normal;  points[Index] = c;  Index++;
-}
 
-//----------------------------------------------------------------------------
-
-point4
-unit( const point4& p )
-{
-    float len = p.x*p.x + p.y*p.y + p.z*p.z;
-    
-    point4 t;
-    if ( len > DivideByZeroTolerance ) {
-	t = p / sqrt(len);
-	t.w = 1.0;
-    }
-
-    return t;
-}
-
-void
-divide_triangle( const point4& a, const point4& b,
-		 const point4& c, int count )
-{
-    if ( count > 0 ) {
-        point4 v1 = unit( a + b );
-        point4 v2 = unit( a + c );
-        point4 v3 = unit( b + c );
-        divide_triangle(  a, v1, v2, count - 1 );
-        divide_triangle(  c, v2, v3, count - 1 );
-        divide_triangle(  b, v3, v1, count - 1 );
-        divide_triangle( v1, v3, v2, count - 1 );
-    }
-    else {
-        triangle( a, b, c );
-    }
-}
-
-void
-tetrahedron( int count )
-{
-    point4 v[4] = {
-	vec4( 0.0, 0.0, 1.0, 1.0 ),
-	vec4( 0.0, 0.942809, -0.333333, 1.0 ),
-	vec4( -0.816497, -0.471405, -0.333333, 1.0 ),
-	vec4( 0.816497, -0.471405, -0.333333, 1.0 )
-    };
-
-    divide_triangle( v[0], v[1], v[2], count );
-    divide_triangle( v[3], v[2], v[1], count );
-    divide_triangle( v[0], v[3], v[1], count );
-    divide_triangle( v[0], v[2], v[3], count );
-}
+GLubyte elems[]={0, 1, 2, 
+		 3, 0, 1,
+		 0, 2, 3,
+		 1, 2, 3
+};
 
 //----------------------------------------------------------------------------
 
@@ -85,38 +41,45 @@ tetrahedron( int count )
 void
 init()
 {
-    // Subdivide a tetrahedron into a sphere
-    tetrahedron( NumTimesToSubdivide );
-
     // Create a vertex array object
-    GLuint vao;
+    GLuint vao, vbo[2], ebo;
+
     glGenVertexArrays( 1, &vao );
     glBindVertexArray( vao );
+	
 
-    // Create and initialize a buffer object
-    GLuint buffer;
-    glGenBuffers( 1, &buffer );
-    glBindBuffer( GL_ARRAY_BUFFER, buffer );
-    glBufferData( GL_ARRAY_BUFFER, sizeof(points) + sizeof(normals),
-		  NULL, GL_STATIC_DRAW );
-    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(points), points );
-    glBufferSubData( GL_ARRAY_BUFFER, sizeof(points),
-		     sizeof(normals), normals );
+	// bind vertex, color, and elems arrays to buffers
+	glGenBuffers(2, vbo);
+	glBindBuffer(GL_ARRAY_BUFFER,vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER,sizeof(vertexarray),vertexarray,GL_STATIC_DRAW);
+	glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,(void*)0);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER,sizeof(colorarray),colorarray,GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+  
+	glGenBuffers(1,&ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(elems),elems,GL_STATIC_DRAW);
 
+	
     // Load shaders and use the resulting shader program
     GLuint program = InitShader( "vshader56.glsl", "fshader56.glsl" );
     glUseProgram( program );
 	
     // set up vertex arrays
-    GLuint vPosition = glGetAttribLocation( program, "vPosition" );
-    glEnableVertexAttribArray( vPosition );
-    glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0,
-			   BUFFER_OFFSET(0) );
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 
-    GLuint vNormal = glGetAttribLocation( program, "vNormal" ); 
-    glEnableVertexAttribArray( vNormal );
-    glVertexAttribPointer( vNormal, 3, GL_FLOAT, GL_FALSE, 0,
-			   BUFFER_OFFSET(sizeof(points)) );
+    // GLuint vPosition = glGetAttribLocation( program, "vPosition" );
+    // glEnableVertexAttribArray( vPosition );
+    // glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0,
+	// 		   BUFFER_OFFSET(0) );
+
+    // GLuint vNormal = glGetAttribLocation( program, "vNormal" ); 
+    // glEnableVertexAttribArray( vNormal );
+    // glVertexAttribPointer( vNormal, 3, GL_FLOAT, GL_FALSE, 0,
+	// 		   BUFFER_OFFSET(sizeof(points)) );
 
     // Initialize shader lighting parameters
     point4 light_position( 0.0, 0.0, 2.0, 0.0 );
