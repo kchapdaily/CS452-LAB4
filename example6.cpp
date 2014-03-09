@@ -7,6 +7,10 @@ const int NumVertices = 8;
 typedef Angel::vec4 point4;
 typedef Angel::vec4 color4;
 
+static point4 at( 0.0, 0.0, 0.0, 1.0 );
+static point4 eye( 2.0, 2.0, 2.0, 1.0 );
+static vec4   up( 0.0, 1.0, 0.0, 0.0 );
+
 // Model-view and projection matrices uniform location
 GLuint  ModelView, Projection;
 
@@ -80,14 +84,14 @@ init()
 	// glEnableVertexAttribArray(1);
 
     // Initialize shader lighting parameters
-    point4 light_position( 0.0, 0.0, -2.0, 0.0 );
-    color4 light_ambient( 0.0, 0.5, 0.0, 1.0 );
-    color4 light_diffuse( 0.0, 1.0, 0.0, 1.0 );
-    color4 light_specular( 0.0, 0.0, 0.0, 1.0 );
+    point4 light_position( 0.0, 0.0, 1.0, 0.0 );
+    color4 light_ambient( 0.2, 0.2, 0.2, 1.0 );
+    color4 light_diffuse( 1.0, 1.0, 1.0, 1.0 );
+    color4 light_specular( 1.0, 1.0, 1.0, 1.0 );
 
-    color4 material_ambient( 1.0, 1.0, 1.0, 1.0 );
-    color4 material_diffuse( 1.0, 1.0, 1.0, 1.0 );
-    color4 material_specular( 1.0, 1.0, 1.0, 1.0 );
+    color4 material_ambient( 1.0, 0.0, 1.0, 1.0 );
+    color4 material_diffuse( 1.0, 0.8, 0.0, 1.0 );
+    color4 material_specular( 1.0, 0.0, 1.0, 1.0 );
     float  material_shininess = 5.0;
 
     color4 ambient_product = light_ambient * material_ambient;
@@ -123,15 +127,10 @@ display( void )
 {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    point4 at( 0.0, 0.0, 0.0, 1.0 );
-    point4 eye( 2.0, 2.0, 2.0, 1.0 );
-    vec4   up( 0.0, 1.0, 0.0, 0.0 );
-
     mat4 model_view = LookAt( eye, at, up );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view );
-
+	
 	glDrawElements(GL_TRIANGLES, sizeof(elems), GL_UNSIGNED_BYTE,NULL);
-    // glDrawArrays( GL_TRIANGLES, 0, NumVertices );
     glutSwapBuffers();
 }
 
@@ -143,9 +142,28 @@ keyboard( unsigned char key, int x, int y )
     switch( key ) {
 	case 033: // Escape Key
 	case 'q': case 'Q':
-	    exit( EXIT_SUCCESS );
-	    break;
+	    exit( EXIT_SUCCESS );break;
+	case 'w':
+		// move camera up
+		eye[1]+=0.5;break;
+	case 's':
+		// move camera down
+		eye[1]-=0.5;break;
+	case 'a':
+		// move camera left
+		eye[0]-=0.5;break;
+	case 'd':
+		// move camera right
+		eye[0]+=0.5;break;
     }
+	if (eye[0] >= 18 | eye[0] <= -18) {
+		eye[0] = -eye[0];
+	}
+
+	if (eye[1] >= 18 | eye[1] <= -18) {
+		eye[1] = -eye[1];
+	}
+	glutPostRedisplay();
 }
 
 //----------------------------------------------------------------------------
@@ -162,12 +180,12 @@ reshape( int width, int height )
     GLfloat aspect = GLfloat(width)/height;
 
     if ( aspect > 1.0 ) {
-	left *= aspect;
-	right *= aspect;
+		left *= aspect;
+		right *= aspect;
     }
     else {
-	top /= aspect;
-	bottom /= aspect;
+		top /= aspect;
+		bottom /= aspect;
     }
 
     mat4 projection = Ortho( left, right, bottom, top, zNear, zFar );
