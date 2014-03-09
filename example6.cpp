@@ -26,17 +26,6 @@ GLfloat vertexarray[]={size, size, size,   //V0
 					   size, -size, -size  //V7
 };
 
-GLfloat colorarray[]={1.0f,1.0f,1.0f,1.0f,
-					  0.5f,1.0f,1.0f,1.0f,
-					  1.0f,0.5f,1.0f,1.0f,
-					  1.0f,1.0f,0.5f,1.0f,
-					  1.0f,1.0f,1.0f,1.0f,
-					  0.5f,1.0f,1.0f,1.0f,
-					  1.0f,0.5f,1.0f,1.0f,
-                      1.0f,1.0f,0.5f,1.0f
-};											
-
-
 GLubyte elems[]={0, 1, 2,
 				 2, 3, 0,
 				 0, 3, 7,
