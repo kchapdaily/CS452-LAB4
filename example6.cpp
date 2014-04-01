@@ -15,6 +15,7 @@ static vec4   up( 0.0, 1.0, 0.0, 0.0 );
 GLuint  ModelView, Projection;
 
 GLfloat size=1;
+GLfloat norm=1/sqrt(3.0);
 
 GLfloat vertexarray[]={size, size, size,   //V0
 					   -size, size, size,  //V1
@@ -24,6 +25,15 @@ GLfloat vertexarray[]={size, size, size,   //V0
 					   -size, -size, size, //V5
 					   -size, -size, -size,//V6
 					   size, -size, -size  //V7
+};
+GLfloat normals_array[]={norm, norm, norm,   //V0
+					   -norm, norm, norm,  //V1
+					   -norm, norm, -norm, //V2
+					   norm, norm, -norm,  //V3
+					   norm, -norm, norm,  //V4
+					   -norm, -norm, norm, //V5
+					   -norm, -norm, -norm,//V6
+					   norm, -norm, -norm  //V7
 };
 
 GLubyte elems[]={0, 1, 2,
@@ -50,26 +60,35 @@ init()
     // Create a vertex array object
     GLuint vao, vbo, ebo;
 
+    // Load shaders and use the resulting shader program
+    GLuint program = InitShader( "vshader56.glsl", "fshader56.glsl" );
+    glUseProgram( program );
+	
     glGenVertexArrays( 1, &vao );
     glBindVertexArray( vao );
 	
 	// bind vertex, color, and elems arrays to buffers
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER,vbo);
-	glBufferData(GL_ARRAY_BUFFER,sizeof(vertexarray),vertexarray,GL_STATIC_DRAW);
-	glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,(void*)0);
-    
+	glBufferData(GL_ARRAY_BUFFER,sizeof(vertexarray) + sizeof(normals_array),NULL,GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertexarray), vertexarray);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(normals_array), normals_array);
+	// glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,(void*)0);
+
+	GLuint vPosition = glGetAttribLocation(program, "vPosition" );
+	glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+	glEnableVertexAttribArray(vPosition);
+	GLuint vNormal = glGetAttribLocation(program, "vNormal" );
+	glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(vertexarray)));
+    glEnableVertexAttribArray(vNormal);
+					
+
 	glGenBuffers(1,&ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(elems),elems,GL_STATIC_DRAW);
-
-	
-    // Load shaders and use the resulting shader program
-    GLuint program = InitShader( "vshader56.glsl", "fshader56.glsl" );
-    glUseProgram( program );
-	
+		
     // set up vertex arrays
-	glEnableVertexAttribArray(0);
+	// glEnableVertexAttribArray(0);
 	// glEnableVertexAttribArray(1);
 
     // Initialize shader lighting parameters
@@ -106,7 +125,7 @@ init()
     
     glEnable( GL_DEPTH_TEST );
     
-    glClearColor( 1.0, 1.0, 1.0, 1.0 ); /* white background */
+    glClearColor( 0.0, 0.0, 0.0, 0.0 );
 }
 
 //----------------------------------------------------------------------------
@@ -192,7 +211,7 @@ main( int argc, char **argv )
     glutInitWindowSize( 512, 512 );
     glutInitContextVersion( 2, 1 );
     glutInitContextProfile( GLUT_CORE_PROFILE );
-    glutCreateWindow( "Sphere" );
+    glutCreateWindow( "LAB4" );
 
     glewInit();
 
