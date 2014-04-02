@@ -57,75 +57,85 @@ GLubyte elems[]={0, 1, 2,
 void
 init()
 {
-    // Create a vertex array object
-    GLuint vao, vbo, ebo;
+	GLuint vao, vbo, ebo;
+	glGenVertexArrays( 1,&vao);
+	glBindVertexArray( vao );
 
-    // Load shaders and use the resulting shader program
-    GLuint program = InitShader( "vshader56.glsl", "fshader56.glsl" );
-    glUseProgram( program );
-	
-    glGenVertexArrays( 1, &vao );
-    glBindVertexArray( vao );
-	
-	// bind vertex, color, and elems arrays to buffers
-	glGenBuffers(1, &vbo);
+	glGenBuffers(1,&vbo);
 	glBindBuffer(GL_ARRAY_BUFFER,vbo);
 	glBufferData(GL_ARRAY_BUFFER,sizeof(vertexarray) + sizeof(normals_array),NULL,GL_STATIC_DRAW);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertexarray), vertexarray);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(normals_array), normals_array);
-	// glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,(void*)0);
+	glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(vertexarray),vertexarray);
+	glBufferSubData(GL_ARRAY_BUFFER,sizeof(vertexarray),sizeof(normals_array),normals_array);
+
+	GLuint program = InitShader( "vshader56.glsl", "fshader56.glsl" );
+	glUseProgram( program );
 
 	GLuint vPosition = glGetAttribLocation(program, "vPosition" );
-	glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-	glEnableVertexAttribArray(vPosition);
+	glVertexAttribPointer(vPosition,3,GL_FLOAT,GL_FALSE,0,BUFFER_OFFSET(0));
+	glEnableVertexAttribArray( vPosition );
+
 	GLuint vNormal = glGetAttribLocation(program, "vNormal" );
-	glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(vertexarray)));
-    glEnableVertexAttribArray(vNormal);
-					
+	glVertexAttribPointer(vNormal,3,GL_FLOAT,GL_FALSE,0,BUFFER_OFFSET(sizeof(vertexarray)));
+	glEnableVertexAttribArray( vNormal );
 
 	glGenBuffers(1,&ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(elems),elems,GL_STATIC_DRAW);
-		
-    // set up vertex arrays
-	// glEnableVertexAttribArray(0);
-	// glEnableVertexAttribArray(1);
 
-    // Initialize shader lighting parameters
-    point4 light_position( 0.0, 0.0, 1.0, 0.0 );
-    color4 light_ambient( 0.2, 0.2, 0.2, 1.0 );
-    color4 light_diffuse( 1.0, 1.0, 1.0, 1.0 );
-    color4 light_specular( 1.0, 1.0, 1.0, 1.0 );
+	
+	// Initialize shader lighting parameters
+	point4 light1_position( 10.0, 10.0, 10.0, 0.0 );
+	color4 light1_ambient( 0.3, 0.2, 0.2, 1.0 );
+	color4 light1_diffuse( 0.9, 0.6, 0.6, 1.0 );
+	color4 light1_specular( 1.0, 0.6, 0.6, 1.0 );
 
-    color4 material_ambient( 1.0, 0.0, 1.0, 1.0 );
-    color4 material_diffuse( 1.0, 0.8, 0.0, 1.0 );
-    color4 material_specular( 1.0, 0.0, 1.0, 1.0 );
+	point4 light2_position( -10.0, -10.0, -10.0, 0.0 );
+	color4 light2_ambient( 0.3, 0.2, 0.2, 1.0 );
+	color4 light2_diffuse( 0.9, 0.6, 0.6, 1.0 );
+	color4 light2_specular( 1.0, 0.6, 0.6, 1.0 );
+
+	color4 material_ambient( 0.4, 0.25, 4.1, 1.0 );
+	color4 material_diffuse( 0.8, 0.5, 0.2, 1.0 );
+	color4 material_specular( 0.8, 0.8, 0.8, 1.0 );
     float  material_shininess = 5.0;
-
-    color4 ambient_product = light_ambient * material_ambient;
-    color4 diffuse_product = light_diffuse * material_diffuse;
-    color4 specular_product = light_specular * material_specular;
 	
-    glUniform4fv( glGetUniformLocation(program, "AmbientProduct"),
-		  1, ambient_product );
-    glUniform4fv( glGetUniformLocation(program, "DiffuseProduct"),
-		  1, diffuse_product );
-    glUniform4fv( glGetUniformLocation(program, "SpecularProduct"),
-		  1, specular_product );
-	
-    glUniform4fv( glGetUniformLocation(program, "LightPosition"),
-		  1, light_position );
+    color4 ambient_product1 = light1_ambient * material_ambient;
+    color4 diffuse_product1 = light1_diffuse * material_diffuse;
+    color4 specular_product1 = light1_specular * material_specular;
 
+	color4 ambient_product2 = light2_ambient * material_ambient;
+    color4 diffuse_product2 = light2_diffuse * material_diffuse;
+    color4 specular_product2 = light2_specular * material_specular;
+
+    glUniform4fv( glGetUniformLocation(program, "AmbientProduct1"),
+		  1, ambient_product1 );
+    glUniform4fv( glGetUniformLocation(program, "DiffuseProduct1"),
+		  1, diffuse_product1 );
+    glUniform4fv( glGetUniformLocation(program, "SpecularProduct1"),
+		  1, specular_product1 );
+
+	glUniform4fv( glGetUniformLocation(program, "AmbientProduct2"),
+		  1, ambient_product2 );
+    glUniform4fv( glGetUniformLocation(program, "DiffuseProduct2"),
+		  1, diffuse_product2 );
+    glUniform4fv( glGetUniformLocation(program, "SpecularProduct2"),
+		  1, specular_product2 );
+	
+    glUniform4fv( glGetUniformLocation(program, "Light1Position"),
+		  1, light1_position );
+
+    glUniform4fv( glGetUniformLocation(program, "Light2Position"),
+		  1, light2_position );
+	
     glUniform1f( glGetUniformLocation(program, "Shininess"),
 		 material_shininess );
 		 
-    // Retrieve transformation uniform variable locations
     ModelView = glGetUniformLocation( program, "ModelView" );
     Projection = glGetUniformLocation( program, "Projection" );
     
     glEnable( GL_DEPTH_TEST );
     
-    glClearColor( 0.0, 0.0, 0.0, 0.0 );
+    glClearColor( 1.0, 1.0, 1.0, 1.0 );
 }
 
 //----------------------------------------------------------------------------
