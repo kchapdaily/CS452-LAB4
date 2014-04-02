@@ -85,13 +85,13 @@ init()
 	
 	// Initialize shader lighting parameters
 	point4 light1_position( 10.0, 10.0, 10.0, 0.0 );
-	color4 light1_ambient( 0.3, 0.2, 0.2, 1.0 );
-	color4 light1_diffuse( 0.9, 0.6, 0.6, 1.0 );
+	color4 light1_ambient( 0.0, 0.9, 0.0, 1.0 );
+	color4 light1_diffuse( 0.0, 0.9, 0.0, 1.0 );
 	color4 light1_specular( 1.0, 0.6, 0.6, 1.0 );
 
 	point4 light2_position( -10.0, -10.0, -10.0, 0.0 );
-	color4 light2_ambient( 0.3, 0.2, 0.2, 1.0 );
-	color4 light2_diffuse( 0.9, 0.6, 0.6, 1.0 );
+	color4 light2_ambient( 0.9, 0.0, 0.0, 1.0 );
+	color4 light2_diffuse( 0.9, 0.0, 0.0, 1.0 );
 	color4 light2_specular( 1.0, 0.6, 0.6, 1.0 );
 
 	color4 material_ambient( 0.4, 0.25, 4.1, 1.0 );
